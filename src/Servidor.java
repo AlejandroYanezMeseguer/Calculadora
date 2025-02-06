@@ -5,40 +5,66 @@ import java.net.Socket;
 
 public class Servidor {
     public static void main(String[] args) {
-        try {
-            // InetSocketAddress nos permite encapsular dirección y puerto en un único punto
-            // En caso de que nos sea útil, pero necesitamos una línea más
-            // que utilizando directamente el constructor del socket
-            InetSocketAddress dir = new InetSocketAddress("localhost", 6666);
-            ServerSocket servidor = new ServerSocket();
-            servidor.bind(dir);
+        while (true) {
+            int primerOperando = 0;
+            int segundoOperando = 0;
+            String operacion = "";
+            try {
+                InetSocketAddress dir = new InetSocketAddress("localhost", 6666);
+                ServerSocket servidor = new ServerSocket();
+                servidor.bind(dir);
 
-            System.out.println("Esperando conexiones...");
-            Socket socket = servidor.accept();
-            System.out.println("Cliente conectado");
+                System.out.println("Esperando conexiones...");
+                Socket socket = servidor.accept();
+                System.out.println("Cliente conectado");
 
-            ObjectInputStream lector = new ObjectInputStream(socket.getInputStream());
+                ObjectInputStream lector = new ObjectInputStream(socket.getInputStream());
+                String[] mensaje = (String[]) lector.readObject();
 
-            // Aquí no se avanzará hasta que NO haya una recepción de mensaje
-            String[] mensaje = (String[]) lector.readObject();
+                for (int i = 0; i < 3; i++) {
+                    switch (i) {
+                        case 0:
+                            primerOperando = Integer.parseInt(mensaje[i]);
+                            break;
+                        case 1:
+                            segundoOperando = Integer.parseInt(mensaje[i]);
+                            break;
+                        case 2:
+                            operacion = String.valueOf(mensaje[i]);
+                            break;
+                    }
+                }
 
-            for (int i = 0; i < 3; i++) {
+                OutputStream salida = socket.getOutputStream();
+                PrintWriter escritor = new PrintWriter(salida, true);
 
-                System.out.println(mensaje[i]);
+                if (segundoOperando == 0 && operacion.equals("/")) {
+                    escritor.println("Error: División por cero. Inténtalo de nuevo.");
+                } else {
+                    switch (operacion) {
+                        case "+":
+                            escritor.println("El resultado es " + Operaciones.Suma(primerOperando, segundoOperando));
+                            break;
+                        case "-":
+                            escritor.println("El resultado es " + Operaciones.Resta(primerOperando, segundoOperando));
+                            break;
+                        case "*":
+                            escritor.println("El resultado es " + Operaciones.Multiplicacion(primerOperando, segundoOperando));
+                            break;
+                        case "/":
+                            escritor.println("El resultado es " + Operaciones.Division(primerOperando, segundoOperando));
+                            break;
+                        case "^":
+                            escritor.println("El resultado es " + Operaciones.Potencia(primerOperando, segundoOperando));
+                            break;
+                    }
+                }
 
+                socket.close();
+                servidor.close();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-
-            OutputStream salida = socket.getOutputStream();
-            // AutoFlush = true para que envíe los datos inmediatamente
-            // para vaciar el buffer de PrintWriter
-            PrintWriter escritor = new PrintWriter(salida, true);
-            // Enviamos el mensaje al cliente
-
-
-            socket.close();
-            servidor.close();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 }

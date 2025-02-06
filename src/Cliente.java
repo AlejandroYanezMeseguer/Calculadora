@@ -8,9 +8,6 @@ public class Cliente {
         Scanner sc = new Scanner(System.in);
         String[] ArrayOperacion = new String[3];
         try {
-            // InetSocketAddress nos permite encapsular dirección y puerto en un único punto
-            // En caso de que nos sea útil, pero necesitamos una línea más
-            // que utilizando directamente el constructor del socket
             InetSocketAddress dir = new InetSocketAddress("localhost", 6666);
 
             Socket socket = new Socket();
@@ -19,33 +16,50 @@ public class Cliente {
 
             ObjectOutputStream salida = new ObjectOutputStream(socket.getOutputStream());
 
-            System.out.println("Introduce el primer operando");
-            String Op1 = sc.nextLine();
-          //  sc.nextLine(); // Consumir la nueva línea
+            String Op1;
+            while (true) {
+                System.out.println("Introduce el primer operando:");
+                Op1 = sc.nextLine();
+                if (Op1.matches("\\d+")) {
+                    break;
+                } else {
+                    System.out.println("Entrada inválida. Por favor, introduce un número.");
+                }
+            }
             ArrayOperacion[0] = Op1;
 
-            System.out.println("Introduce el segundo operando");
-            String Op2 = sc.nextLine();
-           // sc.nextLine(); // Consumir la nueva línea
+            String Op2;
+            while (true) {
+                System.out.println("Introduce el segundo operando:");
+                Op2 = sc.nextLine();
+                if (Op2.matches("\\d+")) {
+                    break;
+                } else {
+                    System.out.println("Entrada inválida. Por favor, introduce un número.");
+                }
+            }
             ArrayOperacion[1] = Op2;
 
-            System.out.println("Introduce el simbolo de la operacion");
-            String Operacion = sc.nextLine();
-            ArrayOperacion[2] = Operacion;
-            salida.writeObject(ArrayOperacion);
-
-            for (int i = 0; i < 3; i++) {
-
-                System.out.println(ArrayOperacion[i]);
-
+            String Operacion;
+            while (true) {
+                System.out.println("Introduce el símbolo de la operación (+, -, *, /, ^):");
+                Operacion = sc.nextLine();
+                if (Operacion.matches("[+\\-*/^]")) {
+                    break;
+                } else {
+                    System.out.println("Entrada inválida. Por favor, introduce un símbolo de operación válido.");
+                }
             }
+            ArrayOperacion[2] = Operacion;
+
+            salida.writeObject(ArrayOperacion);
 
 
 //            // Obtenemos el flujo
-//            BufferedReader lector = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-//
-//            String mensaje = lector.readLine();
-//            System.out.println("Servidor dice: " + mensaje);
+            BufferedReader lector = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            String mensaje = lector.readLine();
+            System.out.println(mensaje);
 
             socket.close();
         } catch (Exception e) {

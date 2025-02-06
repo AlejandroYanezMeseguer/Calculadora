@@ -28,6 +28,15 @@ public class Operaciones {
         return resutado;
     }
 
+    public static int Potencia(int Operando1, int Operando2){
+        int resultado = 1;
+        for (int i = 0; i < Operando2; i++) {
+            resultado *= Operando1;
+        }
+        return resultado;
+    }
+
+
 
 }
 
