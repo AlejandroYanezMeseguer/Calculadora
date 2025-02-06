@@ -1,43 +1,47 @@
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 public class Servidor {
     public static void main(String[] args) {
-        int puerto = 6666;
-        byte[] buffer = new byte[2048];
-        try {
-            System.out.println("Servidor arrancando");
-            DatagramSocket datagramSocket = new DatagramSocket(puerto);
+        while (true){
+            try {
+                // InetSocketAddress nos permite encapsular dirección y puerto en un único punto
+                // En caso de que nos sea útil, pero necesitamos una línea más
+                // que utilizando directamente el constructor del socket
+                InetSocketAddress dir = new InetSocketAddress("localhost", 6666);
+                ServerSocket servidor = new ServerSocket();
+                servidor.bind(dir);
 
-            DatagramPacket peticion = new DatagramPacket(buffer, buffer.length);
-            datagramSocket.receive(peticion);
-            System.out.println("Recibida peticion");
+                System.out.println("Esperando conexiones...");
+                Socket socket = servidor.accept();
+                System.out.println("Cliente conectado");
 
-            String msj = new String(peticion.getData(), 0, peticion.getLength());
-            System.out.println("msj = " + msj);
+                BufferedReader lector = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-            String[] palabras = msj.split(" ");
-            String palabraMasLarga = "";
-            for (String palabra : palabras) {
-                if (palabra.length() > palabraMasLarga.length()) {
-                    palabraMasLarga = palabra;
+                for (int i = 0; i < 3; i++) {
+                    // Aquí no se avanzará hasta que NO haya una recepción de mensaje
+                    String mensaje = lector.readLine();
+                    System.out.println("Cliente dice: " + mensaje);
                 }
-            }
 
-            String respuesta = "Palabra más larga: " + palabraMasLarga + ", Longitud: " + palabraMasLarga.length();
-            buffer = respuesta.getBytes();
-            InetAddress direccion = peticion.getAddress();
-            int puertoCliente = peticion.getPort();
-            DatagramPacket respuestaPacket = new DatagramPacket(buffer, buffer.length, direccion, puertoCliente);
-            datagramSocket.send(respuestaPacket);
-            System.out.println("Envié respuesta al cliente");
-        } catch (SocketException ex) {
-            ex.printStackTrace();
-        } catch (IOException ex) {
-            ex.printStackTrace();
+                OutputStream salida = socket.getOutputStream();
+                // AutoFlush = true para que envíe los datos inmediatamente
+                // para vaciar el buffer de PrintWriter
+                PrintWriter escritor = new PrintWriter(salida, true);
+                // Enviamos el mensaje al cliente
+
+
+                socket.close();
+                servidor.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+
     }
 }

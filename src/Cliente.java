@@ -1,42 +1,52 @@
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Cliente {
     public static void main(String[] args) {
-        int puerto_servidor = 6666;
-        byte[] bufferEnvio = new byte[2048];
-        byte[] bufferRecepcion = new byte[2048];
         Scanner sc = new Scanner(System.in);
         try {
-            InetAddress direccionServidor = InetAddress.getByName("localhost");
+            // InetSocketAddress nos permite encapsular dirección y puerto en un único punto
+            // En caso de que nos sea útil, pero necesitamos una línea más
+            // que utilizando directamente el constructor del socket
+            InetSocketAddress dir = new InetSocketAddress("localhost", 6666);
 
-            DatagramSocket datagramSocket = new DatagramSocket();
-            String msj;
-            System.out.println("Introduce el mensaje para el servidor");
-            msj = sc.nextLine();
-            bufferEnvio = msj.getBytes();
-            DatagramPacket pregunta = new DatagramPacket(bufferEnvio, bufferEnvio.length, direccionServidor, puerto_servidor);
-            datagramSocket.send(pregunta);
+            Socket socket = new Socket();
+            socket.connect(dir);
+            System.out.println("Conectado al servidor");
 
-            DatagramPacket respuesta = new DatagramPacket(bufferRecepcion, bufferRecepcion.length);
-            datagramSocket.receive(respuesta);
-            System.out.println("Recibo respuesta del servidor");
+            OutputStream salida = socket.getOutputStream();
 
-            String msjServidor = new String(respuesta.getData(), 0, respuesta.getLength());
-            System.out.println("msjServidor = " + msjServidor);
-        } catch (SocketException ex) {
-            ex.printStackTrace();
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(Cliente.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(Cliente.class.getName()).log(Level.SEVERE, null, ex);
+            PrintWriter escritor = new PrintWriter(salida,true);
+
+            System.out.println("Introduce el primer operando");
+            float Op1 = sc.nextFloat();
+            sc.nextLine(); // Consumir la nueva línea
+            escritor.println(Op1);
+
+            System.out.println("Introduce el segundo operando");
+            float Op2 = sc.nextFloat();
+            sc.nextLine(); // Consumir la nueva línea
+            escritor.println(Op2);
+
+            System.out.println("Introduce el simbolo de la operacion");
+            String Operacion = sc.nextLine();
+            escritor.println(Operacion);
+
+
+            // Obtenemos el flujo
+            BufferedReader lector = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            String mensaje = lector.readLine();
+            System.out.println("Servidor dice: " + mensaje);
+
+            socket.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
